@@ -235,6 +235,16 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return wrapped
 
+@app.get("/manifest.json")
+def twa_manifest():
+    """Serve the web app manifest at the root URL expected by TWA tooling."""
+    return send_from_directory(Path(app.static_folder) / "branding", "twa-manifest.json", mimetype="application/manifest+json")
+
+@app.get("/.well-known/assetlinks.json")
+def digital_asset_links():
+    """Serve Android Digital Asset Links for Trusted Web Activity verification."""
+    return send_from_directory(ROOT / ".well-known", "assetlinks.json", mimetype="application/json")
+
 @app.get("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")

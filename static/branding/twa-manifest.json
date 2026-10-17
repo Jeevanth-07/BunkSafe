@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "BunkSafe — Attendance Planner",
+  "short_name": "BunkSafe",
+  "description": "Plan smarter. Track attendance. Stay ahead.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090d18",
+  "theme_color": "#090d18",
+  "icons": [
+    {
+      "src": "/static/branding/bunksafe-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
