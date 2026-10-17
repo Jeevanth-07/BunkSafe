@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BunkSafe — Attendance Planner</title>
+<link rel="stylesheet" href="style.css" />
+
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="brandmark">B</div><div><h1>BunkSafe</h1><small>Plan smarter. Stay safe.</small></div></div>
+  <div><div class="nav-label">Workspace</div><nav class="nav">
+    <button class="active" data-page="dashboard"><span class="ico">▦</span><span class="nav-text">Dashboard</span></button>
+    <button data-page="timetable"><span class="ico">▤</span><span class="nav-text">Timetable</span></button>
+    <button data-page="planner"><span class="ico">☑</span><span class="nav-text">Bunk planner</span></button>
+    <button data-page="subjects"><span class="ico">◉</span><span class="nav-text">My subjects</span></button>
+    <button data-page="exams"><span class="ico">▣</span><span class="nav-text">Exam planner</span></button>
+    <button data-page="admin"><span class="ico">⚙</span><span class="nav-text">Admin</span></button>
+  </nav></div>
+  <div class="side-bottom"><strong>Attendance matters.</strong><p>Projections are estimates. Always verify your official attendance rules and records.</p></div>
+</aside>
+<main>
+  <header class="topbar">
+    <div><div class="eyebrow" id="dateLabel">STUDENT WORKSPACE</div><h2 id="pageTitle">Your semester at a glance</h2></div>
+    <div class="top-actions"><button class="secondary" onclick="showPage('timetable')">＋ Import timetable</button><div class="avatar">J</div></div>
+  </header>
+
+  <section id="dashboardPage">
+    <div class="grid stats">
+      <div class="card"><div class="stat-head">Average attendance <span class="stat-icon">◔</span></div><div class="stat-value" id="averageStat">82.1%</div><div class="stat-foot">Across tracked subjects</div></div>
+      <div class="card"><div class="stat-head">Subjects at risk <span class="stat-icon">!</span></div><div class="stat-value" id="riskStat">1</div><div class="stat-foot">Below your safety buffer</div></div>
+      <div class="card"><div class="stat-head">Classes today <span class="stat-icon">▦</span></div><div class="stat-value">4</div><div class="stat-foot">Based on demo timetable</div></div>
+      <div class="card"><div class="stat-head">Planned absences <span class="stat-icon">✓</span></div><div class="stat-value" id="plansStat">0</div><div class="stat-foot">Saved plans this month</div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px;background:linear-gradient(120deg,#201b43,#14253a);border-color:#494078">
+      <div class="section-title"><div><h3>Plan around your exams</h3><p>Choose an upcoming exam to estimate your safe absence margin before exam day.</p></div><button class="primary" onclick="showPage('exams')">Open exam planner →</button></div>
+      <div id="nextExamBanner" class="muted" style="font-size:12px">No exam calendar has been published yet. The administrator can add the semester calendar in Admin.</div>
+    </div>
+    <div class="grid main-grid">
+      <div class="card"><div class="section-title"><div><h3>Attendance by subject</h3><p>Your current attendance and available margin</p></div><button class="quiet" onclick="showPage('subjects')">View all</button></div><div class="subject-list" id="subjectList"></div></div>
+      <div class="card quick-plan"><div class="section-title"><div><h3>Quick bunk check</h3><p>Preview before you make a plan</p></div><span class="stat-icon">✦</span></div><p>Choose a subject and how many upcoming classes you may miss. BunkSafe will estimate your attendance afterward.</p>
+        <div class="field"><label>Subject</label><select id="quickSubject"></select></div>
+        <div class="two"><div class="field"><label>Upcoming classes</label><input id="quickFuture" type="number" min="1" value="5"></div><div class="field"><label>Classes to miss</label><input id="quickMiss" type="number" min="0" value="1"></div></div>
+        <button class="primary" style="width:100%" onclick="quickCalculate()">Calculate projection</button>
+        <div class="result" id="quickResult"></div>
+      </div>
+    </div>
+    <div class="card calendar-card"><div class="calendar-head"><div><h3>October 2026</h3><p class="muted" style="font-size:11px;margin:5px 0 0">A preview of your academic month</p></div><button class="secondary" onclick="showPage('planner')">Plan a date →</button></div><div class="calendar" id="miniCalendar"></div><div class="calendar-note">Blue dot = scheduled class · Gold dot = holiday or special day · Demo calendar only</div></div>
+  </section>
+
+  <section id="timetablePage" class="hidden">
+    <div class="grid upload-grid">
+      <div class="card"><div class="section-title"><div><h3>Import your approved timetable</h3><p>Paste the course list copied from your college portal</p></div><span class="stat-icon">⇧</span></div>
+        <div class="notice">Open your college portal, go to the registered timetable/course list, select the text from the first serial number through the registration status, then copy and paste it below. BunkSafe does not need your college password.</div>
+        <div class="field"><label for="timetableText">Pasted timetable text</label><textarea id="timetableText" placeholder="Paste your copied timetable here...&#10;&#10;Example:&#10;1  General (Semester)  BCSE302L - Database Systems (Theory Only)  D2+TD2  Registered and Approved"></textarea></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap"><button class="primary" onclick="parseTimetable()">Parse timetable</button><button class="secondary" onclick="loadExample()">Load sample format</button><button class="quiet" onclick="clearTimetable()">Clear</button></div>
+        <div id="parseMessage" class="notice hidden"></div>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>What happens next?</h3><p>Review before adding anything to your account</p></div></div>
+        <div class="subject-list">
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">1. Extract courses</div><div class="subject-code">Course codes, names and slot codes</div></div><span class="pill">Import</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">2. Check the results</div><div class="subject-code">Correct any fields the parser cannot identify</div></div><span class="pill yellow">Review</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">3. Map weekly slots</div><div class="subject-code">Match D2, TD2, L5 and other slots to your timetable</div></div><span class="pill">Setup</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">4. Generate dated sessions</div><div class="subject-code">Use the academic calendar for holidays and day orders</div></div><span class="pill green">Calendar</span></div></div>
+        </div>
+        <div class="notice">A copied course list usually contains slot codes, not every class date. The weekly slot timetable and academic calendar must also be configured for accurate planning.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><div><h3>Parsed courses</h3><p id="parsedCount">No imported courses yet</p></div><button class="secondary" id="saveParsed" onclick="saveParsedCourses()" disabled>Use these courses</button></div><div id="parsedTable"><div class="muted" style="font-size:12px;padding:10px 0">Your parsed timetable preview will appear here.</div></div></div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><div><h3>Weekly class-day mapping</h3><p>Confirm which weekdays each subject meets. This lets BunkSafe count sessions before an exam.</p></div><button class="secondary" onclick="renderScheduleMapping()">Refresh mapping</button></div><div class="notice">Slot codes copied from VTOP do not always reveal the exact weekday by themselves. Verify these mappings against your official weekly timetable. Special day orders must also be added to the semester calendar.</div><div id="scheduleMapping"></div><button class="primary" style="margin-top:14px" onclick="saveScheduleMapping()">Save weekly mapping</button></div>
+  </section>
+
+  <section id="plannerPage" class="hidden">
+    <div class="grid main-grid">
+      <div class="card"><div class="section-title"><div><h3>Plan an absence</h3><p>Select a date and subject to preview the impact</p></div><span class="stat-icon">☑</span></div>
+        <div class="field"><label>Date</label><input id="planDate" type="date" value="2026-10-21"></div>
+        <div class="field"><label>Subject</label><select id="planSubject"></select></div>
+        <div class="two"><div class="field"><label>Classes to miss</label><input id="planMiss" type="number" min="1" value="1"></div><div class="field"><label>Future classes planned</label><input id="planFuture" type="number" min="1" value="5"></div></div>
+        <button class="primary" onclick="previewPlan()">Preview plan</button> <button class="secondary" onclick="savePlan()">Save plan</button>
+        <div class="result" id="planResult"></div>
+        <div class="notice">Saving a plan does not change your actual attendance. It records an intended absence for planning purposes only.</div>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>Saved plans</h3><p>Your planned absences on this device</p></div></div><div id="savedPlans" class="subject-list"><div class="muted" style="font-size:12px">No saved plans yet.</div></div></div>
+    </div>
+    <div class="card calendar-card"><div class="calendar-head"><div><h3>Choose a date</h3><p class="muted" style="font-size:11px;margin:5px 0 0">October 2026 demo calendar</p></div></div><div class="calendar" id="plannerCalendar"></div><div class="calendar-note">Select any date to fill the planner date field. The demo calendar displays month navigation; the class counter uses the calendar events and weekly mapping you configure.</div></div>
+  </section>
+
+  <section id="subjectsPage" class="hidden">
+    <div class="card"><div class="section-title"><div><h3>My subjects</h3><p>Demo attendance records — edit them to test BunkSafe</p></div><button class="primary" onclick="addSubject()">＋ Add subject</button></div><div class="table-wrap"><table><thead><tr><th>Subject</th><th>Attended</th><th>Conducted</th><th>Attendance</th><th>Required</th><th>Action</th></tr></thead><tbody id="subjectsTable"></tbody></table></div><div class="notice">This prototype stores edits only in the current browser session. Production data should be saved to a secure backend with authentication.</div></div>
+  </section>
+  <section id="examsPage" class="hidden">
+    <div class="grid main-grid">
+      <div class="card"><div class="section-title"><div><h3>Exam-based bunk planner</h3><p>Estimate your attendance by a selected exam date</p></div><span class="stat-icon">▣</span></div>
+        <div class="notice">The estimate counts classes that are expected to take place before the selected exam. It does not count holidays or cancelled sessions. For this prototype, enter the number of future classes for the chosen subject before the exam.</div>
+        <div class="field"><label>Upcoming exam</label><select id="examSelect" onchange="updateExamDate()"><option value="">No published exams</option></select></div>
+        <div class="field"><label>Exam date</label><input type="date" id="examDate" value="2026-11-01"></div>
+        <div class="field"><label>Subject</label><select id="examSubject"></select></div>
+        <div class="two"><div class="field"><label>Scheduled classes before exam (auto)</label><input id="examFuture" type="number" min="0" value="0" readonly></div><div class="field"><label>Classes you want to miss</label><input id="examMiss" type="number" min="0" value="1"></div></div>
+        <button class="primary" onclick="calculateExamPlan()">Check bunk limit</button>
+        <div class="result" id="examResult"></div>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>Published semester calendar</h3><p>Exams and academic dates announced by the admin</p></div></div><div id="examList" class="subject-list"><div class="muted" style="font-size:12px">No exam dates published yet.</div></div>
+        <div class="notice">A date alone is not enough to calculate the bunk limit. BunkSafe also needs the subject timetable and the number of sessions scheduled before that exam.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="adminPage" class="hidden">
+    <div class="grid upload-grid">
+      <div class="card"><div class="section-title"><div><h3>Admin · Semester calendar</h3><p>Publish the active semester's academic calendar for all users</p></div><span class="stat-icon">⚙</span></div>
+        <div class="notice">Admin workflow prototype: upload the official calendar as a reference, then enter and verify exam dates below. This browser-only demo does not automatically extract dates from PDF/image files or publish to other users; production needs authenticated admin access and a shared backend.</div>
+        <div class="field"><label for="calendarFile">Upload calendar file (PDF, image or spreadsheet)</label><input id="calendarFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls" style="width:100%;background:#0b1220;color:#cbd5e1;border:1px solid #34415c;border-radius:10px;padding:10px"></div>
+        <div id="calendarFileInfo" class="muted" style="font-size:11px;margin:6px 0 14px">No file selected.</div>
+        <div class="two"><div class="field"><label>Semester name</label><input id="semesterName" value="Fall Semester 2026" placeholder="e.g. Fall Semester 2026"></div><div class="field"><label>Semester end date</label><input id="semesterEnd" type="date" value="2026-12-15"></div></div>
+        <div class="field"><label>Exam name</label><input id="newExamName" placeholder="e.g. CAT II — Database Systems"></div>
+        <div class="two"><div class="field"><label>Exam date</label><input id="newExamDate" type="date"></div><div class="field"><label>Exam type</label><select id="newExamType"><option>CAT I</option><option>CAT II</option><option>FAT</option><option>Lab Assessment</option><option>Other</option></select></div></div>
+        <div class="field"><label>Notes (optional)</label><input id="newExamNotes" placeholder="e.g. Exam window, instructions or affected courses"></div>
+        <button class="primary" onclick="publishExam()">Publish exam date</button>
+        <div class="divider" style="height:1px;background:var(--line);margin:22px 0"></div>
+        <div class="section-title"><div><h3>Academic calendar event</h3><p>Add holidays, no-instructional days or special day orders</p></div></div>
+        <div class="two"><div class="field"><label>Event date</label><input id="eventDate" type="date"></div><div class="field"><label>Event type</label><select id="eventType"><option value="instructional">Instructional day</option><option value="holiday">Holiday</option><option value="no-class">No instructional day</option><option value="monday-order">Monday day order</option><option value="wednesday-order">Wednesday day order</option><option value="exam">Exam day</option></select></div></div>
+        <div class="field"><label>Event title</label><input id="eventTitle" placeholder="e.g. Gandhi Jayanti / Monday Day Order"></div>
+        <button class="secondary" onclick="addCalendarEvent()">Add calendar event</button>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>Admin publishing checklist</h3><p>Verify dates before making them visible</p></div></div>
+        <div class="subject-list">
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">1. Upload official calendar</div><div class="subject-code">Keep the original file as the source of truth</div></div><span class="pill">Source</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">2. Add exam dates</div><div class="subject-code">Check exam date, type and semester</div></div><span class="pill yellow">Verify</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">3. Configure holidays and day orders</div><div class="subject-code">Needed to count the real classes before each exam</div></div><span class="pill">Calendar</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">4. Publish to students</div><div class="subject-code">Production version syncs through a shared backend</div></div><span class="pill green">Publish</span></div></div>
+        </div>
+        <div class="section-title" style="margin-top:20px"><div><h3>Calendar events</h3><p>Events used to exclude holidays and flag special days</p></div></div>
+        <div id="calendarEventsList" class="subject-list"><div class="muted" style="font-size:12px">No events added.</div></div>
+        <div class="notice">Security: the production admin page must be restricted to an authorized administrator account. Hiding the page in the interface is not sufficient access control.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">BunkSafe prototype · Plan responsibly · Always verify official attendance records</div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

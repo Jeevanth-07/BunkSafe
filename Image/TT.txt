@@ -1,0 +1,383 @@
+1
+
+General (Semester)
+
+BCSE302L - Database Systems
+
+( Theory Only )
+
+3 0 0 0 3.0
+
+Discipline Core	
+Regular
+
+VL2026270101663
+
+D2+TD2 -
+
+
+SJT402
+
+SWATHI J.N -
+
+
+SCOPE
+
+28-Jun-2026 15:02
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+2
+
+General (Semester)
+
+BCSE302P - Database Systems Lab
+
+( Lab Only )
+
+0 0 2 0 1.0
+
+Discipline Core	
+Regular
+
+VL2026270103422
+
+L5+L6 -
+
+
+PRP231
+
+SWATHI J.N -
+
+
+SCOPE
+
+28-Jun-2026 15:02
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+3
+
+General (Semester)
+
+BCSE303L - Operating Systems
+
+( Theory Only )
+
+3 0 0 0 3.0
+
+Discipline Core	
+Regular
+
+VL2026270102843
+
+B2+TB2 -
+
+
+SJT402
+
+KEERTHIKA P -
+
+
+SCOPE
+
+28-Jun-2026 15:01
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+4
+
+General (Semester)
+
+BCSE303P - Operating Systems Lab
+
+( Lab Only )
+
+0 0 2 0 1.0
+
+Discipline Core	
+Regular
+
+VL2026270103042
+
+L23+L24 -
+
+
+PRP232
+
+KEERTHIKA P -
+
+
+SCOPE
+
+28-Jun-2026 15:01
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+5
+
+General (Semester)
+
+BCSE306L - Artificial Intelligence
+
+( Theory Only )
+
+3 0 0 0 3.0
+
+Discipline Core	
+Regular
+
+VL2026270101766
+
+C2+TC2 -
+
+
+SJT404
+
+ANURADHA D -
+
+
+SCOPE
+
+28-Jun-2026 15:03
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+6
+
+General (Semester)
+
+BCSE307L - Compiler Design
+
+( Theory Only )
+
+3 0 0 0 3.0
+
+Discipline Core	
+Regular
+
+VL2026270103318
+
+G2+TG2 -
+
+
+SJT513
+
+SHALINI L -
+
+
+SCOPE
+
+28-Jun-2026 15:02
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+7
+
+General (Semester)
+
+BCSE307P - Compiler Design Lab
+
+( Lab Only )
+
+0 0 2 0 1.0
+
+Discipline Core	
+Regular
+
+VL2026270103368
+
+L15+L16 -
+
+
+SJT621
+
+SHALINI L -
+
+
+SCOPE
+
+28-Jun-2026 15:02
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+8
+
+General (Semester)
+
+BCSE308L - Computer Networks
+
+( Theory Only )
+
+3 0 0 0 3.0
+
+Discipline Core	
+Regular
+
+VL2026270102612
+
+F2+TF2 -
+
+
+SJT409
+
+KOPPERUNDEVI N -
+
+
+SCOPE
+
+28-Jun-2026 15:01
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+9
+
+General (Semester)
+
+BCSE308P - Computer Networks Lab
+
+( Lab Only )
+
+0 0 2 0 1.0
+
+Discipline Core	
+Regular
+
+VL2026270103357
+
+L9+L10 -
+
+
+SJT622
+
+KOPPERUNDEVI N -
+
+
+SCOPE
+
+28-Jun-2026 15:01
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+10
+
+General (Semester)
+
+BCSE355L - Cloud Architecture Design
+
+( Theory Only )
+
+3 0 0 0 3.0
+
+Open Elective	
+Regular
+
+VL2026270102167
+
+A2+TA2 -
+
+
+SJT402
+
+NIVITHA K -
+
+
+SCOPE
+
+28-Jun-2026 15:00
+
+29-Jun-2026
+- Biometric
+
+Registered and Approved
+
+11
+
+General (Semester)
+
+BSSC102N - Indian Constitution
+
+( Online Course )
+
+0 0 0 0 2.0
+
+Non-graded Core Requirement	
+Regular
+
+VL2026270100437
+
+NIL -
+
+
+NIL
+
+SIVAKUMAR S -
+
+
+SSL
+
+06-Jul-2026 10:35
+
+07-Jul-2026
+- Manual
+
+Registered and Approved
+
+12
+
+General (Semester)
+
+BSTS301P - Advanced Competitive Coding - I
+
+( Soft Skill )
+
+0 0 3 0 1.5
+
+Open Elective	
+Regular
+
+VL2026270100038
+
+E2+TE2 -
+
+
+SJT404
+
+FACE (APT) -
+
+
+SSL
+
+28-Jun-2026 15:00
+
+29-Jun-2026
+- Manual
+
+Registered and Approved
