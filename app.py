@@ -31,8 +31,10 @@ def load_local_env(path):
             os.environ.setdefault(key, value)
 
 load_local_env(ROOT / ".env")
+DATABASE_URL = os.environ.get("BUNKSAFE_DATABASE_URL", "").strip()
 DB_PATH = Path(os.environ.get("BUNKSAFE_DB_PATH", str(ROOT / "bunksafe.db"))).expanduser()
-DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+if not DATABASE_URL:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
 @app.after_request
@@ -101,16 +103,38 @@ def protect_state_changes_from_cross_origin_requests():
     return None
 
 
+class DatabaseConnection:
+    """Small compatibility wrapper so the app can use SQLite locally and PostgreSQL in production."""
+    def __init__(self, connection, postgres=False):
+        self.connection = connection
+        self.postgres = postgres
+
+    def execute(self, sql, params=()):
+        if self.postgres:
+            sql = sql.replace("?", "%s")
+        return self.connection.execute(sql, params)
+
+    def commit(self):
+        return self.connection.commit()
+
+    def rollback(self):
+        return self.connection.rollback()
+
+    def close(self):
+        return self.connection.close()
+
 @contextmanager
 def db():
-    """Open a short-lived SQLite connection and always close it.
-
-    sqlite3.Connection's context manager commits/rolls back transactions but
-    does not close the connection. Explicit cleanup is important on Windows,
-    where an open SQLite file cannot be removed during test teardown.
-    """
-    conn = sqlite3.connect(DB_PATH, timeout=10)
-    conn.row_factory = sqlite3.Row
+    """Open and close a short-lived SQLite or PostgreSQL connection."""
+    if DATABASE_URL:
+        import psycopg
+        from psycopg.rows import dict_row
+        raw = psycopg.connect(DATABASE_URL, row_factory=dict_row, connect_timeout=10)
+        conn = DatabaseConnection(raw, postgres=True)
+    else:
+        raw = sqlite3.connect(DB_PATH, timeout=10)
+        raw.row_factory = sqlite3.Row
+        conn = DatabaseConnection(raw, postgres=False)
     try:
         yield conn
         conn.commit()
@@ -135,28 +159,51 @@ def verify_password(password, stored):
 
 def init_db():
     with db() as conn:
-        conn.execute("""CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT NOT NULL UNIQUE,
-            name TEXT NOT NULL DEFAULT '',
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'student',
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )""")
-        conn.execute("""CREATE TABLE IF NOT EXISTS user_data(
-            user_id INTEGER PRIMARY KEY,
-            payload TEXT NOT NULL DEFAULT '{}',
-            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )""")
-        conn.execute("""CREATE TABLE IF NOT EXISTS shared_calendar(
-            id INTEGER PRIMARY KEY CHECK(id=1),
-            semester TEXT NOT NULL DEFAULT 'Current semester',
-            exams TEXT NOT NULL DEFAULT '[]',
-            events TEXT NOT NULL DEFAULT '[]',
-            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )""")
-        conn.execute("INSERT OR IGNORE INTO shared_calendar(id) VALUES(1)")
+        if DATABASE_URL:
+            conn.execute("""CREATE TABLE IF NOT EXISTS users(
+                id BIGSERIAL PRIMARY KEY,
+                email TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL DEFAULT '',
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'student',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS user_data(
+                user_id BIGINT PRIMARY KEY REFERENCES users(id),
+                payload TEXT NOT NULL DEFAULT '{}',
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS shared_calendar(
+                id INTEGER PRIMARY KEY CHECK(id=1),
+                semester TEXT NOT NULL DEFAULT 'Current semester',
+                exams TEXT NOT NULL DEFAULT '[]',
+                events TEXT NOT NULL DEFAULT '[]',
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.execute("INSERT INTO shared_calendar(id) VALUES(1) ON CONFLICT(id) DO NOTHING")
+        else:
+            conn.execute("""CREATE TABLE IF NOT EXISTS users(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL DEFAULT '',
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'student',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS user_data(
+                user_id INTEGER PRIMARY KEY,
+                payload TEXT NOT NULL DEFAULT '{}',
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS shared_calendar(
+                id INTEGER PRIMARY KEY CHECK(id=1),
+                semester TEXT NOT NULL DEFAULT 'Current semester',
+                exams TEXT NOT NULL DEFAULT '[]',
+                events TEXT NOT NULL DEFAULT '[]',
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.execute("INSERT OR IGNORE INTO shared_calendar(id) VALUES(1)")
 
 def user_view(row):
     return {"id": row["id"], "email": row["email"], "name": row["name"], "role": row["role"]}
@@ -210,12 +257,25 @@ def register():
         return jsonify(error="Enter your name."), 400
     with db() as conn:
         try:
-            cur = conn.execute("INSERT INTO users(email,name,password_hash,role) VALUES(?,?,?,'student')",
-                               (email, name, hash_password(password)))
-            uid = cur.lastrowid
+            insert_sql = "INSERT INTO users(email,name,password_hash,role) VALUES(?,?,?,'student')"
+            if DATABASE_URL:
+                cur = conn.execute(insert_sql + " RETURNING id", (email, name, hash_password(password)))
+                uid = cur.fetchone()["id"]
+            else:
+                cur = conn.execute(insert_sql, (email, name, hash_password(password)))
+                uid = cur.lastrowid
             conn.execute("INSERT INTO user_data(user_id,payload) VALUES(?,?)", (uid, json.dumps({"subjects": [], "plans": []})))
-        except sqlite3.IntegrityError:
-            return jsonify(error="An account with that email already exists."), 409
+        except Exception as exc:
+            is_duplicate = isinstance(exc, sqlite3.IntegrityError)
+            if DATABASE_URL:
+                try:
+                    import psycopg
+                    is_duplicate = isinstance(exc, psycopg.errors.UniqueViolation)
+                except ImportError:
+                    pass
+            if is_duplicate:
+                return jsonify(error="An account with that email already exists."), 409
+            raise
     session.clear()
     session["user_id"] = uid
     session.permanent = True

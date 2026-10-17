@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BunkSafe — Attendance Planner</title>
+<link rel="icon" type="image/png" href="/static/favicon.png" />
+<link rel="apple-touch-icon" href="/static/branding/bunksafe-icon.png" />
+<link rel="stylesheet" href="/static/style.css?v=54" />
+
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="brandmark"><img src="/static/branding/bunksafe-icon.svg" alt="BunkSafe" /></div><div><h1>BunkSafe</h1><small>Plan smarter. Stay safe.</small></div></div>
+  <div><div class="nav-label">Workspace</div><nav class="nav">
+    <button class="active" data-page="dashboard"><span class="ico">▦</span><span class="nav-text">Dashboard</span></button>
+    <button data-page="timetable"><span class="ico">▤</span><span class="nav-text">Timetable</span></button>
+    <button data-page="planner"><span class="ico">☑</span><span class="nav-text">Bunk planner</span></button>
+    <button data-page="subjects"><span class="ico">◉</span><span class="nav-text">My subjects</span></button>
+    <button data-page="exams"><span class="ico">▣</span><span class="nav-text">Exam planner</span></button>
+    <button data-page="admin"><span class="ico">⚙</span><span class="nav-text">Admin</span></button>
+    <button data-page="tools"><span class="ico">✦</span><span class="nav-text">More tools</span></button>
+  </nav></div>
+  <div class="side-bottom"><strong>Attendance matters.</strong><p>Projections are estimates. Always verify your official attendance rules and records.</p></div>
+</aside>
+<main>
+  <div id="backendStatus" class="notice" style="margin-bottom:16px">Connecting to BunkSafe server…</div>
+  <header class="topbar">
+    <div><div class="eyebrow" id="dateLabel">STUDENT WORKSPACE</div><h2 id="pageTitle">Your semester at a glance</h2></div>
+    <div class="top-actions"><button class="secondary" onclick="showPage('timetable')">＋ Import timetable</button><div class="avatar">J</div></div>
+  </header>
+
+  <section id="dashboardPage">
+    <div class="attendance-dashboard-head">
+      <div class="attendance-brand"><div class="attendance-brandmark">⌂</div><div><strong>BunkSafe</strong><span>STUDENT WORKSPACE</span></div></div>
+      <div class="exam-switch" role="group" aria-label="Exam target">
+        <button type="button" class="exam-switch-btn" data-exam="CAT-I" onclick="setDashboardExam('CAT-I')">CAT-I</button>
+        <button type="button" class="exam-switch-btn" data-exam="CAT-II" onclick="setDashboardExam('CAT-II')">CAT-II</button>
+        <button type="button" class="exam-switch-btn active" data-exam="FAT" aria-pressed="true" onclick="setDashboardExam('FAT')">FAT</button>
+      </div>
+      <div class="dashboard-account"><span class="account-dot"></span><span id="dashboardAccountName">My attendance</span></div>
+    </div>
+    <div class="average-summary" aria-live="polite" aria-label="Average attendance summary">
+      <div class="average-summary-top"><div><span class="average-kicker">YOUR SEMESTER SNAPSHOT</span><h2>Average attendance</h2><p>Across all your saved subjects</p></div><div class="average-value" id="dashboardAverageValue">--<span>%</span></div></div>
+      <div class="average-progress"><span id="dashboardAverageProgress" style="width:0%"></span></div>
+      <div class="average-summary-bottom"><span><span class="average-dot"></span><span id="dashboardAverageSubjectCount">0 subjects tracked</span></span><span id="dashboardAverageHint">Keep your attendance on track</span></div>
+    </div>
+    <div class="attendance-dashboard-title"><div><span class="eyebrow">ATTENDANCE OVERVIEW</span><h2>Your subjects</h2><p>Track attendance and check your estimated safe absences.</p></div><button class="secondary" onclick="showPage('subjects')">Manage subjects ↗</button></div>
+    <div id="dashboardAttendanceCards" class="dashboard-attendance-grid"></div>
+    <div class="dashboard-average hidden" id="dashboardAverage">Average attendance — --%</div>
+  </section>
+
+  <section id="toolsPage" class="hidden">
+    <div class="attendance-dashboard-title"><div><span class="eyebrow">EXTRA TOOLS</span><h2>Planning workspace</h2><p>Advanced analysis, quick checks, and calendar previews are collected here.</p></div></div>
+    <div class="grid stats">
+      <div class="card"><div class="stat-head">Average attendance <span class="stat-icon">◔</span></div><div class="stat-value" id="averageStat">82.1%</div><div class="stat-foot">Across tracked subjects</div></div>
+      <div class="card"><div class="stat-head">Subjects at risk <span class="stat-icon">!</span></div><div class="stat-value" id="riskStat">1</div><div class="stat-foot">Below your safety buffer</div></div>
+      <div class="card"><div class="stat-head">Classes today <span class="stat-icon">▦</span></div><div class="stat-value">4</div><div class="stat-foot">Based on demo timetable</div></div>
+      <div class="card"><div class="stat-head">Planned absences <span class="stat-icon">✓</span></div><div class="stat-value" id="plansStat">0</div><div class="stat-foot">Saved plans this month</div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px;background:linear-gradient(120deg,#201b43,#14253a);border-color:#494078">
+      <div class="section-title"><div><h3>Plan around your exams</h3><p>Choose an upcoming exam to estimate your safe absence margin before exam day.</p></div><button class="primary" onclick="showPage('exams')">Open exam planner →</button></div>
+      <div id="nextExamBanner" class="muted" style="font-size:12px">No exam calendar has been published yet. The administrator can add the semester calendar in Admin.</div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="section-title"><div><h3>Semester-wide risk simulator</h3><p>Compare every subject using server-calculated dated sessions for the selected exam date.</p></div><span class="stat-icon">◎</span></div>
+      <div class="two" style="align-items:end">
+        <div class="field"><label for="semesterRiskDate">Target exam date</label><input id="semesterRiskDate" type="date"></div>
+        <div class="field"><label for="semesterRiskBuffer">Safety buffer</label><select id="semesterRiskBuffer"><option value="0">Minimum only</option><option value="2">+2 points</option><option value="3" selected>+3 points</option><option value="5">+5 points</option><option value="8">+8 points</option><option value="10">+10 points</option></select></div>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin:8px 0 12px"><button class="primary" onclick="runSemesterRiskSimulation()">Analyze all subjects</button><button class="quiet" onclick="exportSemesterRiskCsv()">Export analysis CSV</button></div>
+      <div id="semesterRiskSummary" class="notice">Choose an exam date and analyze your subjects to see projected attendance, estimated bunk margins, and recovery priorities.</div>
+      <div id="semesterRiskTable" class="table-wrap" style="margin-top:12px"></div>
+      <p class="muted" style="font-size:11px;margin-top:10px">Future class counts are calculated by the server using your configured weekly mappings and academic-calendar events. Verify VIT day-order mappings; this is not an official attendance guarantee.</p>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="section-title"><div><h3>Personalized attendance action plan</h3><p>Turn the semester risk results into concrete actions for each subject before the selected exam.</p></div><span class="stat-icon">✓</span></div>
+      <div class="notice">Build this plan after running the semester simulator. It prioritizes subjects that are projected below the minimum, then subjects with a low safety margin. It never recommends an absence that exceeds the calculated safe margin.</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 12px"><button class="primary" onclick="buildAttendanceActionPlan()">Build my action plan</button><button class="quiet" onclick="exportAttendanceActionPlan()">Export action plan CSV</button></div>
+      <div id="attendanceActionSummary" class="notice">Run the semester simulator, then build your personalized action plan.</div>
+      <div id="attendanceActionList" style="margin-top:12px"></div>
+    </div>
+    <div class="grid main-grid">
+      <div class="card"><div class="section-title"><div><h3>Attendance by subject</h3><p>Your current attendance and available margin</p></div><button class="quiet" onclick="showPage('subjects')">View all</button></div><div class="subject-list" id="subjectList"></div></div>
+      <div class="card quick-plan"><div class="section-title"><div><h3>Quick bunk check</h3><p>Preview before you make a plan</p></div><span class="stat-icon">✦</span></div><p>Choose a subject and how many upcoming classes you may miss. BunkSafe will estimate your attendance afterward.</p>
+        <div class="field"><label>Subject</label><select id="quickSubject"></select></div>
+        <div class="two"><div class="field"><label>Upcoming classes</label><input id="quickFuture" type="number" min="1" value="5"></div><div class="field"><label>Classes to miss</label><input id="quickMiss" type="number" min="0" value="1"></div></div>
+        <div class="field"><label for="safetyBuffer">Extra safety buffer above the required attendance (%)</label><select id="safetyBuffer" onchange="updateSafetyBuffer()"><option value="0">0 points — exact minimum</option><option value="2">2 percentage points</option><option value="3" selected>3 percentage points — recommended default</option><option value="5">5 percentage points</option><option value="8">8 percentage points</option><option value="10">10 percentage points</option></select></div>
+        <div class="notice">The safety buffer is a planning preference, not an official VIT rule. Maximum absences are calculated against the required percentage plus this buffer.</div>
+        <button class="primary" style="width:100%" onclick="quickCalculate()">Calculate projection</button>
+        <div class="result" id="quickResult"></div>
+      </div>
+    </div>
+    <div class="card calendar-card"><div class="calendar-head"><div><h3>October 2026</h3><p class="muted" style="font-size:11px;margin:5px 0 0">A preview of your academic month</p></div><button class="secondary" onclick="showPage('planner')">Plan a date →</button></div><div class="calendar" id="miniCalendar"></div><div class="calendar-note">Blue dot = scheduled class · Gold dot = holiday or special day · Demo calendar only</div></div>
+  </section>
+
+  <section id="timetablePage" class="hidden">
+    <div class="grid upload-grid">
+      <div class="card"><div class="section-title"><div><h3>Import your approved timetable</h3><p>Paste the course list copied from your college portal</p></div><span class="stat-icon">⇧</span></div>
+        <div class="notice">Open your college portal, go to the registered timetable/course list, select the text from the first serial number through the registration status, then copy and paste it below. BunkSafe does not need your college password.</div>
+        <div class="field"><label for="timetableText">Pasted timetable text</label><textarea id="timetableText" placeholder="Paste your copied timetable here...&#10;&#10;Example:&#10;1  General (Semester)  BCSE302L - Database Systems (Theory Only)  D2+TD2  Registered and Approved"></textarea></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap"><button class="primary" onclick="parseTimetable()">Parse timetable</button><button class="secondary" onclick="loadExample()">Load sample format</button><button class="quiet" onclick="clearTimetable()">Clear</button></div>
+        <div id="parseMessage" class="notice hidden"></div>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>What happens next?</h3><p>Review before adding anything to your account</p></div></div>
+        <div class="subject-list">
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">1. Extract courses</div><div class="subject-code">Course codes, names and slot codes</div></div><span class="pill">Import</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">2. Check the results</div><div class="subject-code">Correct any fields the parser cannot identify</div></div><span class="pill yellow">Review</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">3. Map weekly slots</div><div class="subject-code">Retain slot codes and map sessions using the official timetable</div></div><span class="pill">Setup</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">4. Generate dated sessions</div><div class="subject-code">Use the academic calendar for holidays and day orders</div></div><span class="pill green">Calendar</span></div></div>
+        </div>
+        <div class="notice">A copied course list usually contains slot codes, not every class date. The weekly slot timetable and academic calendar must also be configured for accurate planning.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><div><h3>Parsed courses</h3><p id="parsedCount">No imported courses yet</p></div><button class="secondary" id="saveParsed" onclick="saveParsedCourses()" disabled>Use these courses</button></div><div id="parsedTable"><div class="muted" style="font-size:12px;padding:10px 0">Your parsed timetable preview will appear here.</div></div></div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><div><h3>Weekly class-day mapping</h3><p>Confirm which weekdays each subject meets. This lets BunkSafe count sessions before an exam.</p></div><button class="secondary" onclick="renderScheduleMapping()">Refresh mapping</button></div><div class="notice">Slot codes copied from VTOP are retained for reference but are not assumed to be weekdays. Verify weekly mappings against your official timetable. For exceptions, admin can add a subject-specific extra session or cancel a session on an exact date. These tools still do not automatically decode VIT D1/D2/day-order rules.</div><div id="scheduleMapping"></div><button class="primary" style="margin-top:14px" onclick="saveScheduleMapping()">Save weekly mapping</button></div>
+  </section>
+
+  <section id="plannerPage" class="hidden">
+    <div class="grid main-grid">
+      <div class="card"><div class="section-title"><div><h3>Plan an absence</h3><p>Select a date and subject to preview the impact</p></div><span class="stat-icon">☑</span></div>
+        <div class="field"><label>Date</label><input id="planDate" type="date" value="2026-10-21"></div>
+        <div class="field"><label>Subject</label><select id="planSubject"></select></div>
+        <div class="two"><div class="field"><label>Classes to miss</label><input id="planMiss" type="number" min="1" value="1"></div><div class="field"><label>Future classes planned</label><input id="planFuture" type="number" min="1" value="5"></div></div>
+        <button class="primary" onclick="previewPlan()">Preview plan</button> <button class="secondary" onclick="savePlan()">Save plan</button>
+        <div class="result" id="planResult"></div>
+        <div class="notice">Saving a plan does not change your actual attendance. It records an intended absence for planning purposes only.</div>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>Saved plans</h3><p>Your planned absences on this device</p></div></div><div id="savedPlans" class="subject-list"><div class="muted" style="font-size:12px">No saved plans yet.</div></div></div>
+    </div>
+    <div class="card calendar-card"><div class="calendar-head"><div><h3>Choose a date</h3><p class="muted" style="font-size:11px;margin:5px 0 0">October 2026 demo calendar</p></div></div><div class="calendar" id="plannerCalendar"></div><div class="calendar-note">Select any date to fill the planner date field. The demo calendar displays month navigation; the class counter uses the calendar events and weekly mapping you configure.</div></div>
+  </section>
+
+  <section id="subjectsPage" class="hidden">
+    <div class="card"><div class="section-title"><div><h3>My subjects</h3><p>Your attendance records, saved to your BunkSafe account</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary" onclick="exportAttendanceCsv()">Export CSV</button><button class="primary" onclick="addSubject()">＋ Add subject</button></div></div><div class="table-wrap"><table><thead><tr><th>Subject</th><th>Total class</th><th>Attended</th><th>Attendance</th><th>Required</th><th>Action</th></tr></thead><tbody id="subjectsTable"></tbody></table></div><div class="notice">Enter figures from your official attendance record. BunkSafe does not access VTOP directly; imported data is only as accurate as the file you provide.</div></div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><div><h3>Import attendance from CSV</h3><p>Review and validate your subject attendance before applying it</p></div><span class="stat-icon">⇧</span></div><div class="notice">Required columns: <code>courseCode,courseName,attended,total</code>. Optional columns: <code>required,kind,slot</code>. Attendance counts must be whole numbers, total must be at least 1, and attended cannot exceed total. Existing courses are matched by course code; weekly mappings are preserved.</div><div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="quiet" onclick="downloadAttendanceCsvTemplate()">Download CSV template</button><input id="attendanceCsvFile" type="file" accept=".csv,text/csv" style="max-width:100%;background:#0b1220;color:#cbd5e1;border:1px solid #34415c;border-radius:10px;padding:10px" onchange="previewAttendanceCsv()"><button class="quiet" type="button" onclick="previewAttendanceCsv()">Validate CSV</button></div><div id="attendanceCsvPreview" class="muted" style="font-size:12px">Choose a CSV file, then click Validate CSV to preview attendance records.</div><button class="primary" id="applyAttendanceCsv" style="margin-top:12px" onclick="applyAttendanceCsvImport()" disabled>Apply validated attendance</button></div>
+  </section>
+  <section id="examsPage" class="hidden">
+    <div class="grid main-grid">
+      <div class="card"><div class="section-title"><div><h3>Exam-based bunk planner</h3><p>Estimate your attendance by a selected exam date</p></div><span class="stat-icon">▣</span></div>
+        <div class="notice">The estimate counts mapped sessions expected before the selected exam, excludes holidays/no-class dates, and applies admin weekday timetable substitutions. It cannot infer official VIT slot/day-order rules automatically; verify the result against the official timetable.</div>
+        <div class="field"><label>Upcoming exam</label><select id="examSelect" onchange="updateExamDate()"><option value="">No published exams</option></select></div>
+        <div class="field"><label>Exam date</label><input type="date" id="examDate" value="2026-11-01"></div>
+        <div class="field"><label>Subject</label><select id="examSubject"></select></div>
+        <div class="two"><div class="field"><label>Scheduled classes before exam (auto)</label><input id="examFuture" type="number" min="0" value="0" readonly></div><div class="field"><label>Classes you want to miss</label><input id="examMiss" type="number" min="0" value="1"></div></div>
+        <button class="primary" onclick="calculateExamPlan()">Check bunk limit</button>
+        <div class="result" id="examResult"></div>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>Published semester calendar</h3><p>Exams and academic dates announced by the admin</p></div></div><div id="examList" class="subject-list"><div class="muted" style="font-size:12px">No exam dates published yet.</div></div>
+        <div class="notice">A date alone is not enough to calculate the bunk limit. BunkSafe also needs the subject timetable and the number of sessions scheduled before that exam.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="section-title"><div><h3>Dated class-session timeline</h3><p>Inspect every date before the exam and see exactly why it was counted or excluded.</p></div><span class="stat-icon">☷</span></div>
+      <div class="notice">The timeline is calculated by the authenticated server-side schedule engine using subject-specific class overrides, holidays/no-class dates, active slot codes, weekday substitutions, and configured weekly mappings. The exam date itself is excluded. This is an explainability view, not an official VIT timetable decoder.</div>
+      <div class="two" style="align-items:end"><div class="field"><label for="timelineSubject">Subject</label><select id="timelineSubject"></select></div><div class="field"><label for="timelineExamDate">Exam date (exclusive)</label><input id="timelineExamDate" type="date"></div></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin:8px 0 12px"><button class="primary" onclick="buildDatedTimeline()">Build dated timeline</button><button class="quiet" onclick="exportDatedTimelineCsv()">Export timeline CSV</button><label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#b7c3da"><input id="timelineShowAll" type="checkbox" checked> Show non-class dates too</label></div>
+      <div id="datedTimelineSummary" class="notice">Choose a subject and exam date, then build the timeline to inspect each date's inclusion or exclusion reason.</div><div id="datedTimelineTable" class="table-wrap" style="margin-top:12px"></div>
+      <p class="muted" style="font-size:11px;margin-top:10px">Dates are evaluated from today up to, but not including, the exam date. If a date has no active slot entry, BunkSafe falls back to its configured weekday mapping unless another calendar event overrides it.</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="section-title"><div><h3>Timetable & attendance validation</h3><p>Find missing mappings and conflicting records before trusting an estimate.</p></div><span class="stat-icon">✓</span></div>
+      <div class="notice">Validation checks the information currently saved in BunkSafe. It cannot confirm that a slot or calendar entry matches the official VIT timetable.</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin:8px 0 12px"><button class="primary" onclick="runDataValidation()">Validate my data</button><button class="quiet" onclick="runServerTimetableAudit()">Run server audit</button><button class="quiet" onclick="exportValidationCsv()">Export validation report</button></div>
+      <div id="validationSummary" class="notice">Run validation to check attendance figures, duplicate course codes, missing timetable mappings, and conflicting calendar events.</div>
+      <div id="validationResults" class="subject-list" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <section id="adminPage" class="hidden">
+    <div class="grid upload-grid">
+      <div class="card"><div class="section-title"><div><h3>Admin · Semester calendar</h3><p>Publish the active semester's academic calendar for all users</p></div><span class="stat-icon">⚙</span></div>
+        <div class="notice">Admin workflow prototype: upload the official calendar as a reference, then enter and verify exam dates below. This browser-only demo does not automatically extract dates from PDF/image files or publish to other users; production needs authenticated admin access and a shared backend.</div>
+        <div class="field"><label for="calendarFile">Upload calendar file (PDF, image or spreadsheet)</label><input id="calendarFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls" style="width:100%;background:#0b1220;color:#cbd5e1;border:1px solid #34415c;border-radius:10px;padding:10px"></div>
+        <div id="calendarFileInfo" class="muted" style="font-size:11px;margin:6px 0 14px">No file selected.</div>
+        <div class="two"><div class="field"><label>Semester name</label><input id="semesterName" value="Fall Semester 2026" placeholder="e.g. Fall Semester 2026"></div><div class="field"><label>Semester end date</label><input id="semesterEnd" type="date" value="2026-12-15"></div></div>
+        <div class="field"><label>Exam name</label><input id="newExamName" placeholder="e.g. CAT II — Database Systems"></div>
+        <div class="two"><div class="field"><label>Exam date</label><input id="newExamDate" type="date"></div><div class="field"><label>Exam type</label><select id="newExamType"><option>CAT I</option><option>CAT II</option><option>FAT</option><option>Lab Assessment</option><option>Other</option></select></div></div>
+        <div class="field"><label>Notes (optional)</label><input id="newExamNotes" placeholder="e.g. Exam window, instructions or affected courses"></div>
+        <button class="primary" onclick="publishExam()">Publish exam date</button>
+        <div class="divider" style="height:1px;background:var(--line);margin:22px 0"></div>
+        <div class="section-title"><div><h3>Import calendar events from CSV</h3><p>Bulk-import verified dates instead of entering them one by one</p></div></div>
+        <div class="notice">CSV columns: <code>date,type,title,courseCode</code>. Supported types: <code>slot-day</code>, <code>holiday</code>, <code>no-class</code>, <code>monday-order</code> through <code>friday-order</code>, <code>exam</code>, <code>class-session</code>, <code>class-cancelled</code>, and <code>instructional</code>. Dates must use YYYY-MM-DD. This imports rows only after you preview and confirm them.</div>
+        <div class="field"><label for="calendarCsvImport">Choose CSV file</label><input id="calendarCsvImport" type="file" accept=".csv,text/csv" style="width:100%;background:#0b1220;color:#cbd5e1;border:1px solid #34415c;border-radius:10px;padding:10px" onchange="previewCalendarCsv()"></div>
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="quiet" onclick="downloadCalendarCsvTemplate()">Download CSV template</button><button class="secondary" onclick="importCalendarCsv()" id="importCalendarCsvBtn" disabled>Import validated rows</button></div>
+        <div id="calendarCsvPreview" class="muted" style="font-size:12px">Choose a CSV file to validate and preview rows.</div>
+        <div class="divider" style="height:1px;background:var(--line);margin:22px 0"></div>
+        <div class="section-title"><div><h3>Academic calendar event</h3><p>Add holidays, active slot codes, substitutions or session overrides</p></div></div>
+        <div class="two"><div class="field"><label>Event date</label><input id="eventDate" type="date"></div><div class="field"><label>Event type</label><select id="eventType"><option value="instructional">Instructional day</option><option value="slot-day">Active slot codes for this date</option><option value="holiday">Holiday</option><option value="no-class">No instructional day</option><option value="monday-order">Use Monday timetable</option><option value="tuesday-order">Use Tuesday timetable</option><option value="wednesday-order">Use Wednesday timetable</option><option value="thursday-order">Use Thursday timetable</option><option value="friday-order">Use Friday timetable</option><option value="exam">Exam day</option><option value="class-session">Extra class session for a subject</option><option value="class-cancelled">Cancel a subject session</option></select></div></div>
+        <div class="field"><label>Subject course code (required only for subject session overrides)</label><input id="eventCourseCode" placeholder="e.g. BCSE302L"></div>
+        <div class="field"><label>Event title / active slot codes</label><input id="eventTitle" placeholder="e.g. Holiday name, or D2, TD2, A1 for a slot day"></div><div class="notice">For a slot-aware date, choose “Active slot codes for this date” and enter the exact active slot codes separated by commas, such as D2, TD2. This must be transcribed from the official VIT day-order timetable; BunkSafe does not guess which slots are active.</div>
+        <button class="secondary" onclick="addCalendarEvent()">Add calendar event</button>
+      </div>
+      <div class="card"><div class="section-title"><div><h3>Admin publishing checklist</h3><p>Verify dates before making them visible</p></div></div>
+        <div class="subject-list">
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">1. Upload official calendar</div><div class="subject-code">Keep the original file as the source of truth</div></div><span class="pill">Source</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">2. Add exam dates</div><div class="subject-code">Check exam date, type and semester</div></div><span class="pill yellow">Verify</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">3. Configure holidays and active slots</div><div class="subject-code">Enter verified slot codes for dates where the official timetable is available</div></div><span class="pill">Calendar</span></div></div>
+          <div class="subject"><div class="subject-top"><div><div class="subject-name">4. Publish to students</div><div class="subject-code">Production version syncs through a shared backend</div></div><span class="pill green">Publish</span></div></div>
+        </div>
+        <div class="section-title" style="margin-top:20px"><div><h3>Calendar events</h3><p>Holidays exclude sessions; weekday substitutions use the selected weekday mapping</p></div></div>
+        <div id="calendarEventsList" class="subject-list"><div class="muted" style="font-size:12px">No events added.</div></div>
+        <div class="notice">Security: the production admin page must be restricted to an authorized administrator account. Hiding the page in the interface is not sufficient access control.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">BunkSafe v59 · Mobile-first attendance dashboard · Always verify official attendance records</div>
+</main>
+</div>
+<nav class="mobile-bottom-nav" aria-label="Main mobile navigation">
+  <button class="mobile-nav-item active" data-mobile-page="dashboard" onclick="showPage('dashboard')"><span aria-hidden="true">▦</span><small>Dashboard</small></button>
+  <button class="mobile-nav-item" data-mobile-page="timetable" onclick="showPage('timetable')"><span aria-hidden="true">▤</span><small>Timetable</small></button>
+  <button class="mobile-nav-item" data-mobile-page="planner" onclick="showPage('planner')"><span aria-hidden="true">☑</span><small>Bunk planner</small></button>
+  <button class="mobile-nav-item" data-mobile-page="subjects" onclick="showPage('subjects')"><span aria-hidden="true">◉</span><small>My subjects</small></button>
+  <button class="mobile-nav-item" data-mobile-page="exams" onclick="showPage('exams')"><span aria-hidden="true">▣</span><small>Exam planner</small></button>
+  <button class="mobile-nav-item" data-mobile-page="admin" onclick="showPage('admin')"><span aria-hidden="true">⚙</span><small>Admin</small></button>
+</nav>
+
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="brand" style="padding:0 0 16px"><div class="brandmark">B</div><div><h1>BunkSafe</h1><small>Plan smarter. Stay safe.</small></div></div>
+    <h2 id="authTitle">Sign in to BunkSafe</h2>
+    <p class="muted" style="font-size:12px;line-height:1.5">Create an account to keep your attendance plans synced. Admin accounts are configured by the application owner.</p>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 8 characters"></div>
+    <div id="authNameWrap" class="field hidden"><label>Your name</label><input id="authName" autocomplete="name" placeholder="Student name"></div>
+    <div id="authError" class="auth-error"></div>
+    <button id="authSubmit" class="primary" style="width:100%" onclick="submitAuth()">Sign in</button>
+    <button id="authSwitch" class="quiet" style="width:100%;margin-top:10px" onclick="toggleAuthMode()">Create student account</button>
+    <p class="muted" style="font-size:10px;line-height:1.5;margin-top:14px">Never enter your college portal password here. Use only your BunkSafe account.</p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/static/script.js?v=55"></script>
+</body>
+</html>

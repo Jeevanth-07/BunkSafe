@@ -1,3 +1,1 @@
-## Public hosting
-
-For a guided Render deployment with a persistent SQLite disk, follow `DEPLOY_RENDER.md`. Review `render.yaml` and the current hosting plan price before creating resources. Public deployment must use HTTPS and persistent storage; the local `run.bat` is for development only.
+For the free-tier deployment path, see `README_VERCEL_NEON.md`. Use Vercel for the Flask application and Neon PostgreSQL for persistent data. Render-specific `render.yaml` and `DEPLOY_RENDER.md` are retained for the older Render deployment path and are not used by Vercel.
